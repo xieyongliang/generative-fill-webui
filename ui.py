@@ -105,7 +105,7 @@ def txt2img_summit(*args):
     }
 
     try:
-        payload = {'task': 'txt2img', 'txt2img_payload': inputs}
+        payload = {'task': 'text-to-image', 'txt2img_payload': inputs}
         if utils.sagemaker_endpoint:
             response = utils.invoke_async_inference(payload)        
         elif utils.use_webui:
@@ -268,7 +268,7 @@ def img2img_summit(*args):
     }
 
     try:
-        payload = {'task': 'img2img', 'img2img_payload': inputs}
+        payload = {'task': 'image-to-image', 'img2img_payload': inputs}
         if utils.sagemaker_endpoint:
             response = utils.invoke_async_inference(payload)        
         elif utils.use_webui:
@@ -281,7 +281,6 @@ def img2img_summit(*args):
             else:
                 images = []
                 payload = json.loads(response.text)
-                print(payload.keys())
                 for image in payload['images']:
                     image = utils.decode_base64_to_image(image)
                     images.append(image)
@@ -354,7 +353,6 @@ def upscale_submit(*args):
             if response.status_code == 200:
                 images = []
                 payload = json.loads(response.text)
-                print(payload.keys())
                 for image in payload['images']:
                     image = utils.decode_base64_to_image(image)
                     images.append(image)
@@ -620,7 +618,6 @@ def run_cn_inpaint(input_image, sel_mask,
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invoations', json=payload)
         print(response)
-        print(response.text)
         if response.status_code == 200:
             payload = json.loads(response.text)
             iteration_count = payload['iteration_count']

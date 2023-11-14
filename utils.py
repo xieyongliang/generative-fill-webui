@@ -15,8 +15,8 @@ from botocore.exceptions import ClientError
 import traceback
 import time
 
-use_webui = os.environ('use_webui', False)
-sagemaker_endpoint = os.environ('sagemaker_endpoint', None)
+use_webui = os.environ.get('use_webui', False)
+sagemaker_endpoint = os.environ.get('sagemaker_endpoint', None)
 if sagemaker_endpoint:
     from sagemaker.predictor import Predictor
     from sagemaker.predictor_async import AsyncPredictor
