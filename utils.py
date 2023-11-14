@@ -145,6 +145,7 @@ def handle_response(response):
     status_code = response['status_code'] if isinstance(response, dict) else response.status_code
     text = response['text'] if isinstance(response, dict) else response.text
 
+    print(status_code)
     return status_code, text
 
 max_controlnet_models = 1
@@ -615,5 +616,3 @@ sam_sampler_names = [
     "DPM2 Karras",
     "DPM2 a Karras",
 ]
-
-

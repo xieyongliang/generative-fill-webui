@@ -129,6 +129,7 @@ def txt2img_summit(*args):
             return gr.update(), gr.update()            
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update(), gr.update()
 
 def img2img_summit(*args):
@@ -294,6 +295,7 @@ def img2img_summit(*args):
             return gr.update(), gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update(), gr.update()
 
 def upscale_submit(*args):
@@ -329,7 +331,7 @@ def upscale_submit(*args):
         
         if upscale_mode == 0:
             payload["image"] = utils.encode_image_to_base64(image)
-            inputs = {'task':'extra-single-image', 'extras_single_payload': payload}
+            inputs = {'task':'extras-single-image', 'extras_single_payload': payload}
             if utils.sagemaker_endpoint:
                 response = utils.invoke_async_inference(inputs)
             elif utils.use_webui:
@@ -349,7 +351,7 @@ def upscale_submit(*args):
                 return gr.update(), gr.update()
         elif upscale_mode == 1:
             payload["imageList"] = [utils.encode_image_to_base64(x) for x in imageList]
-            inputs = {'task': 'extra-batch-images', 'extras_batch_payload': payload}
+            inputs = {'task': 'extras-batch-images', 'extras_batch_payload': payload}
             if utils.sagemaker_endpoint:
                 response = utils.invoke_async_inference(inputs)
             elif utils.use_webui:
@@ -371,6 +373,7 @@ def upscale_submit(*args):
             return gr.update(), gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update(), gr.update()
 
 def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, pad_tb_barance, padding_mode="edge"):
@@ -405,6 +408,7 @@ def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, 
             return gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def run_sam(input_image, anime_style_chk=False):
@@ -420,12 +424,11 @@ def run_sam(input_image, anime_style_chk=False):
     try:
         inputs = {'task': '/inpaint-anything/sam', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
             response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/sam', json=payload)
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
-        print(response)
 
         status_code, text = utils.handle_response(response)
         if status_code == 200:
@@ -438,8 +441,8 @@ def run_sam(input_image, anime_style_chk=False):
         else:
             return gr.update()
     except Exception as e:
-        print(traceback.format_exc())
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
@@ -464,7 +467,6 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
             response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/mask', json=payload)
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
-        print(response)
 
         status_code, text = utils.handle_response(response)
         if status_code == 200:
@@ -481,8 +483,8 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
         else:
             return gr.update()
     except Exception as e:
-        print(traceback.format_exc())
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
@@ -517,6 +519,7 @@ def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
             return gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def apply_mask(input_image, sel_mask):
@@ -554,6 +557,7 @@ def apply_mask(input_image, sel_mask):
             return gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def add_mask(input_image, sel_mask):
@@ -591,6 +595,7 @@ def add_mask(input_image, sel_mask):
             return gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def run_cn_inpaint(input_image, sel_mask,
@@ -637,7 +642,6 @@ def run_cn_inpaint(input_image, sel_mask,
             response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/cninpaint', json=payload)
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invoations', json=inputs)
-        print(response)
 
         status_code, text = utils.handle_response(response)
         if status_code == 200:
@@ -651,6 +655,7 @@ def run_cn_inpaint(input_image, sel_mask,
             return gr.update(), gr.update()
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return gr.update()
 
 def run_get_alpha_image(input_image, sel_mask):
