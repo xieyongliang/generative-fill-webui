@@ -143,7 +143,7 @@ latent_upscale_modes = [
 
 def handle_response(response):
     status_code = response['status_code'] if isinstance(response, dict) else response.status_code
-    text = response['status_code'] if isinstance(response, dict) else response.text
+    text = response['text'] if isinstance(response, dict) else response.text
 
     return status_code, text
 
