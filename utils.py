@@ -24,7 +24,7 @@ if sagemaker_endpoint:
     from sagemaker.deserializers import JSONDeserializer
     
     predictor = Predictor(endpoint_name=sagemaker_endpoint)
-    async_predictor = AsyncPredictor(predictor=predictor, endpoint_name=sagemaker_endpoint)
+    async_predictor = AsyncPredictor(predictor=predictor, name=sagemaker_endpoint)
 
     s3_client = boto3.client('s3')
     s3_resource = boto3.resource("s3")
@@ -39,11 +39,11 @@ if sagemaker_endpoint:
         global async_predictor
         async_predictor.serializer = JSONSerializer()
         async_predictor.deserializer = JSONDeserializer()
-        async_predictor.predict_async(payload)
+        prediction = async_predictor.predict_async(payload)
 
         try:
             while True:
-                body = handle_aysnc_inference(async_predictor.output_path)
+                body = handle_aysnc_inference(prediction.output_path)
                 if body:
                     return {'status_code': 200, 'text': body}
                 else:
@@ -143,21 +143,24 @@ latent_upscale_modes = [
 
 max_controlnet_models = 1
 
-api_endpoint = os.environ['api_endpoint']
+api_endpoint = os.environ.get('api_endpoint', None)
 
 sd_models = []
 
 def refresh_sd_models():
     global sd_models
-    payload = {'task': '/sdapi/v1/sd_models'}
+    payload = {'task': '/sdapi/v1/sd-models'}
     if sagemaker_endpoint:
         response = invoke_async_inference(payload)
     elif use_webui:
-        response = requests.get(url=f'{api_endpoint}/sdapi/v1/sd_models')
+        response = requests.get(url=f'{api_endpoint}/sdapi/v1/sd-models')
     else:
         response = requests.post(url=f'{api_endpoint}/invocations', json=payload)
-    if response.status_code == 200:
-        sd_models = [x.title for x in json.loads(response.text)]
+
+    status_code, text = handle_response(response)
+
+    if status_code == 200:
+        sd_models = [x["title"] for x in json.loads(text)]
     else:
         sd_models = [
             "v1-5-pruned-emaonly.safetensors [6ce0161689]"
@@ -176,13 +179,22 @@ def refresh_controlnet_models():
         response = requests.get(url=f'{api_endpoint}/controlnet/model_list')
     else:
         response = requests.post(url=f'{api_endpoint}/invocations', json=payload)
-    if response.status_code == 200:
-        controlnet_models = ['None'] + json.loads(response.text)['model_list']
+
+    status_code, text = handle_response(response)
+
+    if status_code == 200:
+        controlnet_models = ['None'] + json.loads(text)['model_list']
     else:
         controlnet_models = ['None']
     print(controlnet_models)
 
 refresh_controlnet_models()
+
+def handle_response(response):
+    status_code = response['status_code'] if isinstance(response, dict) else response.status_code
+    text = response['status_code'] if isinstance(response, dict) else response.text
+
+    return status_code, text
 
 class FormComponent:
     def get_expected_parent(self):

@@ -60,7 +60,7 @@ def txt2img_summit(*args):
     global progress
     progress[id_task] = 0
 
-    inputs = {
+    payload = {
         "prompt": prompt,
         "negative_prompt": negative_prompt,
         "styles": [],
@@ -105,19 +105,21 @@ def txt2img_summit(*args):
     }
 
     try:
-        payload = {'task': 'text-to-image', 'txt2img_payload': inputs}
+        inputs = {'task': 'text-to-image', 'txt2img_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/txt2img', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/txt2img', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
             if txt2img_interrupted:
                 return gr.update(), gr.update()
             else:
                 images = []
-                payload = json.loads(response.text)
+                payload = json.loads(text)
                 for image in payload['images']:
                     image = utils.decode_base64_to_image(image)
                     images.append(image)
@@ -220,7 +222,7 @@ def img2img_summit(*args):
         width = int(image.width * scale_by)
         height = int(image.height * scale_by)
 
-    inputs = {
+    payload = {
         "prompt": prompt,
         "negative_prompt": negative_prompt,
         "styles": [],
@@ -268,19 +270,21 @@ def img2img_summit(*args):
     }
 
     try:
-        payload = {'task': 'image-to-image', 'img2img_payload': inputs}
+        inputs = {'task': 'image-to-image', 'img2img_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/img2img', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/img2img', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
             if img2img_interrupted:
                 return gr.update(), gr.update()
             else:
                 images = []
-                payload = json.loads(response.text)
+                payload = json.loads(text)
                 for image in payload['images']:
                     image = utils.decode_base64_to_image(image)
                     images.append(image)
@@ -309,7 +313,7 @@ def upscale_submit(*args):
     codeformer_weight = args[13]
 
     try:
-        inputs = {
+        payload = {
             "upscale_mode": resize_mode,
             "upscaling_resize": upscaling_resize,
             "upscaling_resize_w": upscaling_resize_w,
@@ -324,17 +328,19 @@ def upscale_submit(*args):
         }
         
         if upscale_mode == 0:
-            inputs["image"] = utils.encode_image_to_base64(image)
-            payload = {'task':'extra-single-image', 'extras_single_payload': inputs}
+            payload["image"] = utils.encode_image_to_base64(image)
+            inputs = {'task':'extra-single-image', 'extras_single_payload': payload}
             if utils.sagemaker_endpoint:
-                response = utils.invoke_async_inference(payload)        
+                response = utils.invoke_async_inference(inputs)
             elif utils.use_webui:
-                response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/extra-single-image', json=inputs)
+                response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/extra-single-image', json=payload)
             else:
-                response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-            if response.status_code == 200:
+                response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+            status_code, text = utils.handle_response(response)
+            if status_code == 200:
                 images = []
-                payload = json.loads(response.text)
+                payload = json.loads(text)
                 image = payload['image']
                 image = utils.decode_base64_to_image(image)
                 images.append(image)
@@ -342,17 +348,19 @@ def upscale_submit(*args):
             else:
                 return gr.update(), gr.update()
         elif upscale_mode == 1:
-            inputs["imageList"] = [utils.encode_image_to_base64(x) for x in imageList]
-            payload = {'task': 'extra-batch-images', 'extras_batch_payload': inputs}
+            payload["imageList"] = [utils.encode_image_to_base64(x) for x in imageList]
+            inputs = {'task': 'extra-batch-images', 'extras_batch_payload': payload}
             if utils.sagemaker_endpoint:
-                response = utils.invoke_async_inference(payload)        
+                response = utils.invoke_async_inference(inputs)
             elif utils.use_webui:
-                response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/extra-batch-images', json=inputs)
+                response = requests.post(url=f'{utils.api_endpoint}/sdapi/v1/extra-batch-images', json=payload)
             else:
-                response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-            if response.status_code == 200:
+                response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+            status_code, text = utils.handle_response(response)
+            if status_code == 200:
                 images = []
-                payload = json.loads(response.text)
+                payload = json.loads(text)
                 for image in payload['images']:
                     image = utils.decode_base64_to_image(image)
                     images.append(image)
@@ -368,7 +376,7 @@ def upscale_submit(*args):
 def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, pad_tb_barance, padding_mode="edge"):
     global sam_orig_image, sam_pad_mask
 
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "orig_image": utils.encode_image_to_base64(sam_orig_image),
         "pad_scale_width": pad_scale_width,
@@ -379,15 +387,17 @@ def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, 
     }
 
     try:
-        payload = {'task': '/inpaint-anything/padding', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/padding', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/padding', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/padding', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             input_image = utils.decode_base64_to_image(payload['input_image'])
             sam_pad_mask = payload['pad_mask']
             return gr.update(value=input_image)
@@ -400,7 +410,7 @@ def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, 
 def run_sam(input_image, anime_style_chk=False):
     global sam_masks, sam_pad_mask, sam_model_id
 
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "sam_model_id": sam_model_id,
         "anime_style_chk": anime_style_chk,
@@ -408,16 +418,18 @@ def run_sam(input_image, anime_style_chk=False):
     }
 
     try:
-        payload = {'task': '/inpaint-anything/sam', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/sam', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(payload)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/sam', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/sam', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
         print(response)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             sam_image = utils.decode_base64_to_image(payload['seg_image'])
 
             sam_masks = payload['sam_masks']
@@ -433,7 +445,7 @@ def run_sam(input_image, anime_style_chk=False):
 def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
     global sam_mask_image
 
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "sam_image": {
             "image": utils.encode_image_to_base64(sam_image["image"]),
@@ -445,16 +457,18 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
     }
 
     try:
-        payload = {'task': '/inpaint-anything/mask', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/mask', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/mask', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/mask', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json={'task': '/inpaint-anything/mask', 'extra_payload': inputs})
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
         print(response)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             if sel_mask is None:
@@ -474,22 +488,24 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
 def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
     global sam_mask_image
 
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "mask_image": utils.encode_image_to_base64(sam_mask_image),
         "expand_mask_iteration_count": expand_mask_iteration_count
     }
 
     try:
-        payload = {'task': '/inpaint-anything/expand-mask', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/expand-mask', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/expand-mask', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/expand-mask', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
@@ -506,7 +522,7 @@ def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
 def apply_mask(input_image, sel_mask):
     global sam_mask_image
     
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "sel_mask": {
             "image": utils.encode_image_to_base64(sel_mask["image"]),
@@ -516,15 +532,17 @@ def apply_mask(input_image, sel_mask):
     }
 
     try:
-        payload = {'task': '/inpaint-anything/apply-mask', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/apply-mask', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/apply-mask', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/apply-mask', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
@@ -541,7 +559,7 @@ def apply_mask(input_image, sel_mask):
 def add_mask(input_image, sel_mask):
     global sam_mask_image
     
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "sel_mask": {
             "image": utils.encode_image_to_base64(sel_mask["image"]),
@@ -551,15 +569,17 @@ def add_mask(input_image, sel_mask):
     }
 
     try:
-        payload = {'task': '/inpaint-anything/add-mask', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/add-mask', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/add-mask', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/add-mask', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=payload)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
@@ -584,7 +604,7 @@ def run_cn_inpaint(input_image, sel_mask,
     if sel_mask is None:
         return gr.update(), gr.update()
 
-    inputs = {
+    payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "mask_image": utils.encode_image_to_base64(sam_mask_image),
         "cn_prompt": cn_prompt,
@@ -610,16 +630,18 @@ def run_cn_inpaint(input_image, sel_mask,
     }
 
     try:
-        payload = {'task': '/inpaint-anything/cninpaint', 'extra_payload': inputs}
+        inputs = {'task': '/inpaint-anything/cninpaint', 'extra_payload': payload}
         if utils.sagemaker_endpoint:
-            response = utils.invoke_async_inference(payload)        
+            response = utils.invoke_async_inference(inputs)
         elif utils.use_webui:
-            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/cninpaint', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/cninpaint', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invoations', json=payload)
+            response = requests.post(url=f'{utils.api_endpoint}/invoations', json=inputs)
         print(response)
-        if response.status_code == 200:
-            payload = json.loads(response.text)
+
+        status_code, text = utils.handle_response(response)
+        if status_code == 200:
+            payload = json.loads(text)
             iteration_count = payload['iteration_count']
             images = []
             for output_image in payload['output_images']:

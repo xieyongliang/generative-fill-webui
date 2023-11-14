@@ -1,0 +1,4 @@
+gradio 
+opencv-python 
+boto3 
+sagemaker
