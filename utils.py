@@ -141,6 +141,12 @@ latent_upscale_modes = [
     "SwinIR 4x"
 ]
 
+def handle_response(response):
+    status_code = response['status_code'] if isinstance(response, dict) else response.status_code
+    text = response['status_code'] if isinstance(response, dict) else response.text
+
+    return status_code, text
+
 max_controlnet_models = 1
 
 api_endpoint = os.environ.get('api_endpoint', None)
@@ -189,12 +195,6 @@ def refresh_controlnet_models():
     print(controlnet_models)
 
 refresh_controlnet_models()
-
-def handle_response(response):
-    status_code = response['status_code'] if isinstance(response, dict) else response.status_code
-    text = response['status_code'] if isinstance(response, dict) else response.text
-
-    return status_code, text
 
 class FormComponent:
     def get_expected_parent(self):
