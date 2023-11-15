@@ -468,7 +468,6 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
 
-        print(response)
         status_code, text = utils.handle_response(response)
         if status_code == 200:
             payload = json.loads(text)
