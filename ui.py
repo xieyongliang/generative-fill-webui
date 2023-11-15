@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 from typing import Tuple, List
 import cv2
-import gc
+from starlette.middleware.gzip import GZipMiddleware
 
 progress = {}
 
@@ -468,6 +468,7 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
         else:
             response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
 
+        print(response)
         status_code, text = utils.handle_response(response)
         if status_code == 200:
             payload = json.loads(text)
@@ -641,7 +642,7 @@ def run_cn_inpaint(input_image, sel_mask,
         elif utils.use_webui:
             response = requests.post(url=f'{utils.api_endpoint}/inpaint-anything/cninpaint', json=payload)
         else:
-            response = requests.post(url=f'{utils.api_endpoint}/invoations', json=inputs)
+            response = requests.post(url=f'{utils.api_endpoint}/invocations', json=inputs)
 
         status_code, text = utils.handle_response(response)
         if status_code == 200:
@@ -2038,6 +2039,9 @@ def progress_api(req: ProgressRequest):
 demo = create_ui()
 
 app, _, _ = demo.launch(share=True, prevent_thread_lock=True)
+app.middleware_stack = None  # reset current middleware to allow modifying user provided list
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 app.add_api_route('/internal/progress', progress_api, methods=["POST"], response_model=ProgressResponse)
 

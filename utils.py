@@ -40,6 +40,7 @@ if sagemaker_endpoint:
         async_predictor.serializer = JSONSerializer()
         async_predictor.deserializer = JSONDeserializer()
         prediction = async_predictor.predict_async(payload)
+        print(prediction.output_path)
 
         try:
             while True:
@@ -54,9 +55,11 @@ if sagemaker_endpoint:
     
     def handle_aysnc_inference(s3uri):    
         try:
+            print('try to download...')
             output_bucket, output_key = get_bucket_and_key(s3uri)
             output_obj = s3_resource.Object(output_bucket, output_key)
             body = output_obj.get()["Body"].read().decode("utf-8")
+            print('done...')
             return body
         except ClientError as ex:
             if ex.response['Error']['Code'] == 'NoSuchKey':
