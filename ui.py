@@ -126,6 +126,7 @@ def txt2img_summit(*args):
                 progress[id_task] = 1
                 return gr.update(value=images), gr.update(value=utils.plaintext_to_html(json.loads(payload['info'])['infotexts'][0]))
         else:
+            print(text)
             return gr.update(), gr.update()            
     except Exception as e:
         print(e)
@@ -292,6 +293,7 @@ def img2img_summit(*args):
                 progress[id_task] = 1
                 return gr.update(value=images), gr.update(value=utils.plaintext_to_html(json.loads(payload['info'])['infotexts'][0]))
         else:
+            print(text)
             return gr.update(), gr.update()
     except Exception as e:
         print(e)
@@ -348,6 +350,7 @@ def upscale_submit(*args):
                 images.append(image)
                 return gr.update(value=images), gr.update(value=payload['html_info'])
             else:
+                print(text)
                 return gr.update(), gr.update()
         elif upscale_mode == 1:
             payload["imageList"] = [utils.encode_image_to_base64(x) for x in imageList]
@@ -368,6 +371,7 @@ def upscale_submit(*args):
                     images.append(image)
                 return gr.update(value=images), gr.update(value=payload['html_info'])
             else:
+                print(text)
                 return gr.update(), gr.update()
         else:
             return gr.update(), gr.update()
@@ -401,10 +405,11 @@ def run_padding(input_image, pad_scale_width, pad_scale_height, pad_lr_barance, 
         status_code, text = utils.handle_response(response)
         if status_code == 200:
             payload = json.loads(text)
-            input_image = utils.decode_base64_to_image(payload['input_image'])
+            pad_image = utils.decode_base64_to_image(payload['pad_image'])
             sam_pad_mask = payload['pad_mask']
-            return gr.update(value=input_image)
+            return gr.update(value=pad_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -439,6 +444,7 @@ def run_sam(input_image, anime_style_chk=False):
 
             return gr.update(value=sam_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -481,6 +487,7 @@ def select_mask(input_image, sam_image, invert_chk, ignore_black_chk, sel_mask):
                 else:
                     return gr.update(value=ret_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -516,6 +523,7 @@ def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
             else:
                 return gr.update(value=ret_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -554,6 +562,7 @@ def apply_mask(input_image, sel_mask):
             else:
                 return gr.update(value=ret_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -592,6 +601,7 @@ def add_mask(input_image, sel_mask):
             else:
                 return gr.update(value=ret_image)
         else:
+            print(text)
             return gr.update()
     except Exception as e:
         print(e)
@@ -652,6 +662,7 @@ def run_cn_inpaint(input_image, sel_mask,
                 images.append(utils.decode_base64_to_image(output_image))
             return gr.update(value=images), gr.update(value=iteration_count)
         else:
+            print(text)
             return gr.update(), gr.update()
     except Exception as e:
         print(e)

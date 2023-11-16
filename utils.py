@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError
 import traceback
 import time
 
-use_webui = os.environ.get('use_webui', False)
+use_webui = os.environ.get('use_webui', None)
 sagemaker_endpoint = os.environ.get('sagemaker_endpoint', None)
 if sagemaker_endpoint:
     from sagemaker.predictor import Predictor
@@ -147,7 +147,6 @@ def handle_response(response):
     status_code = response['status_code'] if isinstance(response, dict) else response.status_code
     text = response['text'] if isinstance(response, dict) else response.text
 
-    print(status_code)
     return status_code, text
 
 max_controlnet_models = 1
@@ -166,6 +165,7 @@ def refresh_sd_models():
     else:
         response = requests.post(url=f'{api_endpoint}/invocations', json=payload)
 
+    print(response)
     status_code, text = handle_response(response)
 
     if status_code == 200:
@@ -191,6 +191,7 @@ def refresh_controlnet_models():
 
     status_code, text = handle_response(response)
 
+    print(response)
     if status_code == 200:
         controlnet_models = ['None'] + json.loads(text)['model_list']
     else:
