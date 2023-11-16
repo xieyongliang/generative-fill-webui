@@ -500,7 +500,7 @@ def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
     payload = {
         "input_image": utils.encode_image_to_base64(input_image),
         "mask_image": utils.encode_image_to_base64(sam_mask_image),
-        "expand_mask_iteration_count": expand_mask_iteration_count
+        "expand_iteration": expand_mask_iteration_count
     }
 
     try:
@@ -518,7 +518,7 @@ def expand_mask(input_image, sel_mask, expand_mask_iteration_count):
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
-            if sel_mask["image"].shape == ret_image.shape and np.all(sel_mask["image"] == np.array(ret_image)):
+            if np.array(sel_mask["image"]).shape == np.array(ret_image).shape and np.all(np.array(sel_mask["image"]) == np.array(ret_image)):
                 return gr.update()
             else:
                 return gr.update(value=ret_image)
@@ -557,7 +557,7 @@ def apply_mask(input_image, sel_mask):
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
-            if sel_mask["image"].shape == ret_image.shape and np.all(sel_mask["image"] == np.array(ret_image)):
+            if np.array(sel_mask["image"]).shape == np.array(ret_image).shape and np.all(np.array(sel_mask["image"]) == np.array(ret_image)):
                 return gr.update()
             else:
                 return gr.update(value=ret_image)
@@ -596,7 +596,7 @@ def add_mask(input_image, sel_mask):
             sam_mask_image = utils.decode_base64_to_image(payload['mask_image'])
             ret_image = utils.decode_base64_to_image(payload['sel_mask'])
 
-            if sel_mask["image"].shape == ret_image.shape and np.all(sel_mask["image"] == np.array(ret_image)):
+            if np.array(sel_mask["image"]).shape == np.array(ret_image).shape and np.all(np.array(sel_mask["image"]) == np.array(ret_image)):
                 return gr.update()
             else:
                 return gr.update(value=ret_image)
@@ -675,14 +675,14 @@ def run_get_alpha_image(input_image, sel_mask):
         print("The image or mask does not exist")
         return None
 
-    mask_image = np.array(json.loads(sam_mask_image))
+    mask_image = sam_mask_image
     
-    if input_image.shape != mask_image.shape:
+    if np.array(input_image).shape != np.array(mask_image).shape:
         print("The sizes of the image and mask do not match")
         return None
 
     alpha_image = input_image.convert("RGBA")
-    mask_image = Image.fromarray(mask_image).convert("L")
+    mask_image = mask_image.convert("L")
 
     alpha_image.putalpha(mask_image)
 
@@ -693,7 +693,7 @@ def run_get_mask(sel_mask):
     if sam_mask_image is None or sel_mask is None:
         return None
 
-    mask_image = np.array(json.loads(sam_mask_image))
+    mask_image = sam_mask_image
 
     return mask_image
 
@@ -1925,7 +1925,7 @@ def create_segment_anything_inferface():
                         sam_mask_image = np.array(utils.decode_base64_to_image(sam_mask_image))
                 input_image = np.array(input_image)
 
-                if (sam_mask_image is None or sam_mask_image.shape != input_image.shape):
+                if sam_mask_image is None or np.array(sam_mask_image).shape != np.array(input_image).shape:
                     sam_mask_image = np.zeros_like(input_image, dtype=np.uint8)
 
                 ret_sel_image = cv2.addWeighted(input_image, 0.5, sam_mask_image, 0.5, 0)
@@ -1933,7 +1933,7 @@ def create_segment_anything_inferface():
                 if sam_image is None or not isinstance(sam_image, dict) or "image" not in sam_image:
                     sam_masks = None
                     ret_sam_image = Image.fromarray(np.zeros_like(input_image, dtype=np.uint8))
-                elif sam_image["image"].shape == input_image.shape:
+                elif np.array(sam_image["image"]).shape == np.array(input_image).shape:
                     ret_sam_image = gr.update()
                 else:
                     sam_masks = None
