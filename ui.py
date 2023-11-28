@@ -2046,9 +2046,16 @@ def progress_api(req: ProgressRequest):
     
     return ProgressResponse(interrupted=False, completed=progress[req.id_task]==1 if req.id_task in progress else False )
 
+import os
+def user_auth(username, password):
+    return username == os.environ.get('username', None) and password == os.environ.get('password', None)
+
 demo = create_ui()
 
-app, _, _ = demo.launch(share=True, prevent_thread_lock=True)
+app, _, _ = demo.launch(
+    prevent_thread_lock=True,
+    auth=user_auth
+)
 app.middleware_stack = None  # reset current middleware to allow modifying user provided list
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
